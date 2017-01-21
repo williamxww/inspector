@@ -1,0 +1,1 @@
+mvn install:install-file -Dfile=E:/resource/tablelayout-2007-04-21.jar -DgroupId=info.clearthought -DartifactId=tablelayout -Dversion=2007-04-21 -Dpackaging=jar -DgeneratePom=true
