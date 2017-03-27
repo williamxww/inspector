@@ -26,13 +26,12 @@ public class NodeViewerContent extends AbstractNodeViewer {
     private String selectedNode;
 
     public NodeViewerContent() {
-        this.setLayout(new TableLayout(new double[] { TableLayout.FILL },
-                new double[] { 150, TableLayout.PREFERRED, TableLayout.PREFERRED }));
-        this.textArea = new JTextArea();
+        this.setLayout(new BorderLayout());
+        this.textArea = new JTextArea(0, 20);
         this.textArea.setLineWrap(true);
         JScrollPane scroller = new JScrollPane(textArea);
         scroller.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        this.add(scroller, "0,0");
+        this.add(scroller, BorderLayout.CENTER);
     }
 
     /**

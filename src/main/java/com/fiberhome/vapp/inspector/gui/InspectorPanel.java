@@ -22,7 +22,7 @@ import com.fiberhome.vapp.inspector.manager.ZkService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.awt.BorderLayout;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
@@ -30,13 +30,7 @@ import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 
-import javax.swing.JButton;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JSplitPane;
-import javax.swing.JToolBar;
-import javax.swing.SwingWorker;
+import javax.swing.*;
 
 /**
  * @author CGSmithe
@@ -77,20 +71,29 @@ public class InspectorPanel extends JPanel implements NodeViewersChangeListener 
      */
     public InspectorPanel(final ZkService zkService) {
         this.zooInspectorManager = zkService;
-        final ArrayList<AbstractNodeViewer> nodeViewers = new ArrayList<AbstractNodeViewer>();
+        final ArrayList<AbstractNodeViewer> nodeViewers = new ArrayList();
         try {
+            // 从配置文件加载，需要展示哪些panel
             List<String> defaultNodeViewersClassNames = this.zooInspectorManager.getDefaultNodeViewerConfiguration();
             for (String className : defaultNodeViewersClassNames) {
                 nodeViewers.add((AbstractNodeViewer) Class.forName(className).newInstance());
             }
         } catch (Exception ex) {
             LOGGER.error("Error loading default node viewers.", ex);
-            JOptionPane.showMessageDialog(InspectorPanel.this,
-                    "Error loading default node viewers: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(InspectorPanel.this, "Error loading default node viewers: " + ex.getMessage(),
+                    "Error", JOptionPane.ERROR_MESSAGE);
         }
-        nodeViewersPanel = new NodeViewersPanel(zkService, nodeViewers);
-        treeViewer = new InspectorTreeViewer(zkService, nodeViewersPanel);
+
+        // 设置布局
         this.setLayout(new BorderLayout());
+
+        // 右边的panel
+        nodeViewersPanel = new NodeViewersPanel(zkService, nodeViewers);
+
+        // 构造左侧的树
+        treeViewer = new InspectorTreeViewer(zkService, nodeViewersPanel);
+
+        // 设置工具栏
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
         connectButton = new JButton(IconResources.getConnectIcon());
@@ -121,6 +124,8 @@ public class InspectorPanel extends JPanel implements NodeViewersChangeListener 
         refreshButton.setToolTipText("Refresh");
         addNodeButton.setToolTipText("Add Node");
         deleteNodeButton.setToolTipText("Delete Node");
+
+        // 新建连接
         connectButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 ConnectionPropertiesDialog zicpd = new ConnectionPropertiesDialog(
@@ -128,16 +133,22 @@ public class InspectorPanel extends JPanel implements NodeViewersChangeListener 
                 zicpd.setVisible(true);
             }
         });
+
+        // 断开连接
         disconnectButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 disconnect();
             }
         });
+
+        // 刷新
         refreshButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 treeViewer.refreshView();
             }
         });
+
+        // 新增
         addNodeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 final List<String> selectedNodes = treeViewer.getSelectedNodes();
@@ -161,17 +172,17 @@ public class InspectorPanel extends JPanel implements NodeViewersChangeListener 
                         worker.execute();
                     }
                 } else {
-                    JOptionPane.showMessageDialog(InspectorPanel.this,
-                            "Please select 1 parent node for the new node.");
+                    JOptionPane.showMessageDialog(InspectorPanel.this, "Please select 1 parent node for the new node.");
                 }
             }
         });
+
+        // 删除
         deleteNodeButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 final List<String> selectedNodes = treeViewer.getSelectedNodes();
                 if (selectedNodes.size() == 0) {
-                    JOptionPane.showMessageDialog(InspectorPanel.this,
-                            "Please select at least 1 node to be deleted");
+                    JOptionPane.showMessageDialog(InspectorPanel.this, "Please select at least 1 node to be deleted");
                 } else {
                     int answer = JOptionPane.showConfirmDialog(InspectorPanel.this,
                             "Are you sure you want to delete the selected nodes?" + "(This action cannot be reverted)",
@@ -197,25 +208,35 @@ public class InspectorPanel extends JPanel implements NodeViewersChangeListener 
                 }
             }
         });
+
+        // node view
         nodeViewersButton.addActionListener(new ActionListener() {
 
             public void actionPerformed(ActionEvent e) {
-                NodeViewersDialog nvd = new NodeViewersDialog(JOptionPane.getRootFrame(),
-                        nodeViewers, listeners, zkService);
+                NodeViewersDialog nvd = new NodeViewersDialog(JOptionPane.getRootFrame(), nodeViewers, listeners,
+                        zkService);
                 nvd.setVisible(true);
             }
         });
+
+        // about
         aboutButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 AboutDialog zicpd = new AboutDialog(JOptionPane.getRootFrame());
                 zicpd.setVisible(true);
             }
         });
+
+        //添加toolbar
+        this.add(toolbar, BorderLayout.NORTH);
+
+        //左侧的treePanel
         JScrollPane treeScroller = new JScrollPane(treeViewer);
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, treeScroller, nodeViewersPanel);
+//        splitPane.setBorder(BorderFactory.createLineBorder(Color.red));
         splitPane.setResizeWeight(0.25);
         this.add(splitPane, BorderLayout.CENTER);
-        this.add(toolbar, BorderLayout.NORTH);
+
     }
 
     /**
@@ -224,6 +245,12 @@ public class InspectorPanel extends JPanel implements NodeViewersChangeListener 
     public void connect(final Properties connectionProps) {
         SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
 
+            /**
+             * doInBackground 执行连接，执行完后接着执行done()
+             * 
+             * @return
+             * @throws Exception
+             */
             @Override
             protected Boolean doInBackground() throws Exception {
                 return zooInspectorManager.connect(connectionProps);
@@ -233,6 +260,7 @@ public class InspectorPanel extends JPanel implements NodeViewersChangeListener 
             protected void done() {
                 try {
                     if (get()) {
+                        // 刷新树
                         treeViewer.refreshView();
                         connectButton.setEnabled(false);
                         disconnectButton.setEnabled(true);

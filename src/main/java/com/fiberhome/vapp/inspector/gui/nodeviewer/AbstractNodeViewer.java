@@ -47,8 +47,7 @@ public abstract class AbstractNodeViewer extends JPanel implements Transferable 
     /**
      * Called whenever the selected nodes in the tree view changes.
      * 
-     * @param selectedNodes
-     *            - the nodes currently selected in the tree view
+     * @param selectedNodes - the nodes currently selected in the tree view
      * 
      */
     public abstract void nodeSelectionChanged(List<String> selectedNodes);
@@ -59,12 +58,10 @@ public abstract class AbstractNodeViewer extends JPanel implements Transferable 
      */
     public abstract String getTitle();
 
-    /*
+    /**
      * (non-Javadoc)
      * 
-     * @see
-     * java.awt.datatransfer.Transferable#getTransferData(java.awt.datatransfer
-     * .DataFlavor)
+     * @see java.awt.datatransfer.Transferable#getTransferData(DataFlavor)
      */
     public Object getTransferData(DataFlavor flavor) throws UnsupportedFlavorException, IOException {
         if (flavor.equals(nodeViewerDataFlavor)) {
@@ -74,8 +71,7 @@ public abstract class AbstractNodeViewer extends JPanel implements Transferable 
         }
     }
 
-    /*
-     * (non-Javadoc)
+    /**
      * 
      * @see java.awt.datatransfer.Transferable#getTransferDataFlavors()
      */
@@ -83,21 +79,14 @@ public abstract class AbstractNodeViewer extends JPanel implements Transferable 
         return new DataFlavor[] { nodeViewerDataFlavor };
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seejava.awt.datatransfer.Transferable#isDataFlavorSupported(java.awt.
-     * datatransfer.DataFlavor)
+    /**
+     *
+     * @see java.awt.datatransfer.Transferable#isDataFlavorSupported(DataFlavor)
      */
     public boolean isDataFlavorSupported(DataFlavor flavor) {
         return flavor.equals(nodeViewerDataFlavor);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#hashCode()
-     */
     @Override
     public int hashCode() {
         final int prime = 31;
@@ -106,11 +95,6 @@ public abstract class AbstractNodeViewer extends JPanel implements Transferable 
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see java.lang.Object#equals(java.lang.Object)
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj)

@@ -86,11 +86,13 @@ public class ConnectionPropertiesDialog extends JDialog {
             JLabel label = new JLabel(connectionPropertiesLabels.get(entry.getKey()));
             options.add(label, "1," + rowPos);
             if (entry.getValue().size() == 0) {
-                JTextField text = new JTextField();
+                // 设置JTextField的列数为50
+                JTextField text = new JTextField(50);
                 options.add(text, "3," + rowPos);
                 components.put(entry.getKey(), text);
             } else if (entry.getValue().size() == 1) {
-                JTextField text = new JTextField(entry.getValue().get(0));
+                // 设置JTextField的列数为50
+                JTextField text = new JTextField(entry.getValue().get(0), 50);
                 options.add(text, "3," + rowPos);
                 components.put(entry.getKey(), text);
             } else {
@@ -144,7 +146,7 @@ public class ConnectionPropertiesDialog extends JDialog {
 
             }
         });
-        buttonsPanel.add(loadPropsFileButton, "1,0");
+        // buttonsPanel.add(loadPropsFileButton, "1,0");
 
         JButton okButton = new JButton("OK");
         okButton.addActionListener(new ActionListener() {

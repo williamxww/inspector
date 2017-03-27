@@ -6,6 +6,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,35 +29,44 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.fiberhome.vapp.inspector.common.ZkClient;
 
-/**
- * @author CGSmithe
- * 
- */
 public class ZkServiceImpl implements ZkService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ZkServiceImpl.class);
 
-    private static final String A_VERSION = "ACL Version";
-
+    /**
+     * 时间
+     */
     private static final String C_TIME = "Creation Time";
-
-    private static final String C_VERSION = "Children Version";
-
-    private static final String CZXID = "Creation ID";
-
-    private static final String DATA_LENGTH = "Data Length";
-
-    private static final String EPHEMERAL_OWNER = "Ephemeral Owner";
 
     private static final String M_TIME = "Last Modified Time";
 
-    private static final String MZXID = "Modified ID";
+    /**
+     * 版本
+     */
+    private static final String VERSION = "Data Version";
+
+    private static final String C_VERSION = "Children Version";
+
+    private static final String A_VERSION = "ACL Version";
+
+    /**
+     * 数据
+     */
+    private static final String DATA_LENGTH = "Data Length";
 
     private static final String NUM_CHILDREN = "Number of Children";
 
-    private static final String PZXID = "Node ID";
+    private static final String EPHEMERAL_OWNER = "Ephemeral Owner";
 
-    private static final String VERSION = "Data Version";
+    /**
+     * 事务id,zxid是一个64位的数字，它高32位是epoch用来标识leader关系是否改变，每次一个leader被选出来，
+     * 它都会有一个新的epoch，标识当前属于那个leader的统治时期。低32位用于递增计数
+     */
+    private static final String CZXID = "Creation tx id";
+
+    private static final String MZXID = "Modified tx id";
+
+    private static final String PZXID = "Children Change tx id";
 
     private static final String ACL_PERMS = "Permissions";
 
@@ -199,7 +211,7 @@ public class ZkServiceImpl implements ZkService {
                     StringBuilder sb = new StringBuilder();
                     int perms = acl.getPerms();
                     boolean addedPerm = false;
-                    //ALL & READ = READ 说明ALL里面有READ权限
+                    // ALL & READ = READ 说明ALL里面有READ权限
                     if ((perms & Perms.READ) == Perms.READ) {
                         sb.append("Read");
                         addedPerm = true;
@@ -250,17 +262,18 @@ public class ZkServiceImpl implements ZkService {
             }
             Stat s = zooKeeper.exists(nodePath, false);
             if (s != null) {
-                nodeMeta.put(A_VERSION, String.valueOf(s.getAversion()));
-                nodeMeta.put(C_TIME, String.valueOf(s.getCtime()));
-                nodeMeta.put(C_VERSION, String.valueOf(s.getCversion()));
-                nodeMeta.put(CZXID, String.valueOf(s.getCzxid()));
+
                 nodeMeta.put(DATA_LENGTH, String.valueOf(s.getDataLength()));
-                nodeMeta.put(EPHEMERAL_OWNER, String.valueOf(s.getEphemeralOwner()));
-                nodeMeta.put(M_TIME, String.valueOf(s.getMtime()));
-                nodeMeta.put(MZXID, String.valueOf(s.getMzxid()));
                 nodeMeta.put(NUM_CHILDREN, String.valueOf(s.getNumChildren()));
+                nodeMeta.put(EPHEMERAL_OWNER, String.valueOf(s.getEphemeralOwner()));
+                nodeMeta.put(CZXID, String.valueOf(s.getCzxid()));
+                nodeMeta.put(MZXID, String.valueOf(s.getMzxid()));
                 nodeMeta.put(PZXID, String.valueOf(s.getPzxid()));
                 nodeMeta.put(VERSION, String.valueOf(s.getVersion()));
+                nodeMeta.put(C_VERSION, String.valueOf(s.getCversion()));
+                nodeMeta.put(A_VERSION, String.valueOf(s.getAversion()));
+                nodeMeta.put(C_TIME, String.valueOf(s.getCtime()));
+                nodeMeta.put(M_TIME, String.valueOf(s.getMtime()));
             }
         } catch (Exception e) {
             LOGGER.error("Error occurred retrieving meta data for node: " + nodePath, e);
@@ -319,8 +332,7 @@ public class ZkServiceImpl implements ZkService {
                 String node = parent + "/" + nodeElement;
                 Stat s = zooKeeper.exists(node, false);
                 if (s == null) {
-                    zooKeeper.create(node, this.codec.encode(null), Ids.OPEN_ACL_UNSAFE,
-                            CreateMode.PERSISTENT);
+                    zooKeeper.create(node, this.codec.encode(null), Ids.OPEN_ACL_UNSAFE, CreateMode.PERSISTENT);
                     parent = node;
                 }
             }
@@ -359,17 +371,23 @@ public class ZkServiceImpl implements ZkService {
         return false;
     }
 
+    /**
+     * 点击新建连接时弹出窗口
+     * 
+     * @return
+     */
     public Pair<Map<String, List<String>>, Map<String, String>> getConnectionPropertiesTemplate() {
         Map<String, List<String>> template = new LinkedHashMap<String, List<String>>();
         template.put(CONNECT_STRING, Arrays.asList(new String[] { "localhost:2181" }));
         template.put(SESSION_TIMEOUT, Arrays.asList(new String[] { "5000" }));
-        template.put(DATA_ENCRYPTION_MANAGER,
-                Arrays.asList(new String[] { "com.fiberhome.vapp.inspector.encryption.DefaultCodec" }));
+        // template.put(DATA_ENCRYPTION_MANAGER,
+        // Arrays.asList(new String[] {
+        // "com.fiberhome.vapp.inspector.encryption.DefaultCodec" }));
         Map<String, String> labels = new LinkedHashMap<String, String>();
         labels.put(CONNECT_STRING, "Connect String");
         labels.put(SESSION_TIMEOUT, "Session Timeout");
-        labels.put(DATA_ENCRYPTION_MANAGER, "Data Encryption Manager");
-        return new Pair<Map<String, List<String>>, Map<String, String>>(template, labels);
+        // labels.put(DATA_ENCRYPTION_MANAGER, "Data Encryption Manager");
+        return new Pair(template, labels);
     }
 
     public void addWatchers(List<String> selectedNodes, NodeListener nodeListener) {
@@ -399,11 +417,12 @@ public class ZkServiceImpl implements ZkService {
         }
     }
 
-    /*
-     * (non-Javadoc)
+    /**
+     * 从外部加载配置文件
      * 
-     * @seeorg.apache.zookeeper.inspector.manager.ZooInspectorManager#
-     * loadNodeViewersFile(java.io.File)
+     * @param selectedFile
+     * @return
+     * @throws IOException
      */
     public List<String> loadNodeViewersFile(File selectedFile) throws IOException {
         List<String> result = new ArrayList<String>();
@@ -428,12 +447,6 @@ public class ZkServiceImpl implements ZkService {
         return result;
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeorg.apache.zookeeper.inspector.manager.ZooInspectorManager#
-     * saveNodeViewersFile(java.io.File, java.util.List)
-     */
     public void saveNodeViewersFile(File selectedFile, List<String> nodeViewersClassNames) throws IOException {
         if (!selectedFile.exists()) {
             selectedFile.createNewFile();
@@ -455,12 +468,6 @@ public class ZkServiceImpl implements ZkService {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @seeorg.apache.zookeeper.inspector.manager.ZooInspectorManager#
-     * setDefaultNodeViewerConfiguration(java.io.File, java.util.List)
-     */
     public void setDefaultNodeViewerConfiguration(List<String> nodeViewersClassNames) throws IOException {
         File defaultDir = defaultsFile.getParentFile();
         if (!defaultDir.exists()) {
@@ -469,7 +476,30 @@ public class ZkServiceImpl implements ZkService {
         saveNodeViewersFile(defaultsFile, nodeViewersClassNames);
     }
 
+    /**
+     * 加载默认配置,通过getResourceAsStream从jar里面读取文件，上面的defaultsFile,在jar里面会读取不到
+     * 
+     * @return
+     * @throws IOException
+     */
     public List<String> getDefaultNodeViewerConfiguration() throws IOException {
-        return loadNodeViewersFile(defaultsFile);
+        List<String> result = new ArrayList();
+        InputStream is = ZkServiceImpl.class.getResourceAsStream("/config/defaultNodeViewers.cfg");
+        Reader reader = new InputStreamReader(is);
+        BufferedReader buff = new BufferedReader(reader);
+        try {
+            while (buff.ready()) {
+                String line = buff.readLine();
+                if (line != null && line.length() > 0) {
+                    result.add(line);
+                }
+            }
+        } finally {
+            buff.close();
+            reader.close();
+            is.close();
+        }
+
+        return result;
     }
 }

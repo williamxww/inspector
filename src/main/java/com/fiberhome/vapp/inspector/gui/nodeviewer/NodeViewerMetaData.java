@@ -1,20 +1,3 @@
-/*
- * ZooInspector
- * 
- * Copyright 2010 Colin Goodheart-Smithe
-
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
-
-       http://www.apache.org/licenses/LICENSE-2.0
-
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
- */
 package com.fiberhome.vapp.inspector.gui.nodeviewer;
 
 import info.clearthought.layout.TableLayout;
@@ -35,10 +18,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingWorker;
 
-/**
- * @author CGSmithe
- * 
- */
+
 public class NodeViewerMetaData extends AbstractNodeViewer {
     private static final Logger LOGGER = LoggerFactory.getLogger(NodeViewerMetaData.class);
 
@@ -48,9 +28,6 @@ public class NodeViewerMetaData extends AbstractNodeViewer {
 
     private String selectedNode;
 
-    /**
-     * 
-     */
     public NodeViewerMetaData() {
         this.setLayout(new BorderLayout());
         this.metaDataPanel = new JPanel();
@@ -59,25 +36,11 @@ public class NodeViewerMetaData extends AbstractNodeViewer {
         this.add(scroller, BorderLayout.CENTER);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.zookeeper.inspector.gui.nodeviewer.ZooInspectorNodeViewer#
-     * getTitle()
-     */
     @Override
     public String getTitle() {
         return "Node Metadata";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.zookeeper.inspector.gui.nodeviewer.ZooInspectorNodeViewer#
-     * nodeSelectionChanged(java.util.Set)
-     */
     @Override
     public void nodeSelectionChanged(List<String> selectedNodes) {
         this.metaDataPanel.removeAll();
@@ -85,22 +48,31 @@ public class NodeViewerMetaData extends AbstractNodeViewer {
             this.selectedNode = selectedNodes.get(0);
             SwingWorker<Map<String, String>, Void> worker = new SwingWorker<Map<String, String>, Void>() {
 
+                /**
+                 * doInBackground方法作为任务线程的一部分执行，它负责完成线程的基本任务，并以返回值来作为线程的执行结果
+                 * @return 任务线程的执行结果
+                 * @throws Exception
+                 */
                 @Override
                 protected Map<String, String> doInBackground() throws Exception {
                     return NodeViewerMetaData.this.zooInspectorManager
                             .getNodeMeta(NodeViewerMetaData.this.selectedNode);
                 }
 
+                /**
+                 * 在doInBackground方法完成之后，SwingWorker调用done方法
+                 */
                 @Override
                 protected void done() {
-                    Map<String, String> data = null;
+                    Map<String, String> data;
                     try {
+                        //阻塞直到任务线程有结果，将其放在done()里肯定不会阻塞
                         data = get();
                     } catch (InterruptedException e) {
-                        data = new HashMap<String, String>();
+                        data = new HashMap();
                         LOGGER.error("Error retrieving meta data for node: " + NodeViewerMetaData.this.selectedNode, e);
                     } catch (ExecutionException e) {
-                        data = new HashMap<String, String>();
+                        data = new HashMap();
                         LOGGER.error("Error retrieving meta data for node: " + NodeViewerMetaData.this.selectedNode, e);
                     }
                     int numRows = data.size() * 2 + 1;
@@ -132,14 +104,6 @@ public class NodeViewerMetaData extends AbstractNodeViewer {
         }
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.zookeeper.inspector.gui.nodeviewer.ZooInspectorNodeViewer#
-     * setZkNodeService
-     * (org.apache.zookeeper.inspector.manager.ZooInspectorNodeManager)
-     */
     @Override
     public void setZkNodeService(ZkNodeService zooInspectorManager) {
         this.zooInspectorManager = zooInspectorManager;

@@ -49,8 +49,8 @@ public class NodeViewersPanel extends JPanel implements TreeSelectionListener, C
     private final ZkNodeService zkNodeService;
 
     /**
-     * @param zkNodeService
-     * @param nodeViewers
+     * @param zkNodeService zkService
+     * @param nodeViewers 从配置文件加载的需要展示的panel
      */
     public NodeViewersPanel(ZkNodeService zkNodeService,
                             List<AbstractNodeViewer> nodeViewers) {

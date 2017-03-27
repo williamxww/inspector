@@ -60,25 +60,11 @@ public class NodeViewerACL extends AbstractNodeViewer {
         this.add(scroller, BorderLayout.CENTER);
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.zookeeper.inspector.gui.nodeviewer.ZooInspectorNodeViewer#
-     * getTitle()
-     */
     @Override
     public String getTitle() {
         return "Node ACLs";
     }
 
-    /*
-     * (non-Javadoc)
-     * 
-     * @see
-     * org.apache.zookeeper.inspector.gui.nodeviewer.ZooInspectorNodeViewer#
-     * nodeSelectionChanged(java.util.Set)
-     */
     @Override
     public void nodeSelectionChanged(List<String> selectedNodes) {
         this.aclDataPanel.removeAll();
@@ -97,11 +83,11 @@ public class NodeViewerACL extends AbstractNodeViewer {
                     try {
                         acls = get();
                     } catch (InterruptedException e) {
-                        acls = new ArrayList<Map<String, String>>();
+                        acls = new ArrayList();
                         LOGGER.error("Error retrieving ACL Information for node: " + selectedNode,
                                 e);
                     } catch (ExecutionException e) {
-                        acls = new ArrayList<Map<String, String>>();
+                        acls = new ArrayList();
                         LOGGER.error("Error retrieving ACL Information for node: " + selectedNode,
                                 e);
                     }
