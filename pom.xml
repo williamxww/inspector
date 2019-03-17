@@ -48,10 +48,15 @@
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/info.clearthought/tablelayout -->
+        <!--<dependency>-->
+            <!--<groupId>info.clearthought</groupId>-->
+            <!--<artifactId>tablelayout</artifactId>-->
+            <!--<version>2007-04-21</version>-->
+        <!--</dependency>-->
         <dependency>
-            <groupId>info.clearthought</groupId>
-            <artifactId>tablelayout</artifactId>
-            <version>2007-04-21</version>
+            <groupId>tablelayout</groupId>
+            <artifactId>TableLayout</artifactId>
+            <version>20050920</version>
         </dependency>
 
     </dependencies>
